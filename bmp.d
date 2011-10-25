@@ -6,13 +6,7 @@ struct Color {
 }
 
 ubyte[4] get_ubytes(uint x) {
-    union CONV {
-        ubyte[4] ret;
-        uint y;
-    }
-    CONV c;
-    c.y = x;
-    return c.ret;
+    return *cast(ubyte[4]*)&x;
 }
 
 ubyte color_value(double x) {
