@@ -86,6 +86,26 @@ class Sphere {
     }
 }
 
+class Light {
+    vec3d pos;
+    Color color;
+
+    this(vec3d pos_, Color color_) {
+        pos = pos_;
+        color = color_;
+    }
+}
+
+class Scene {
+    Sphere[] shapes;
+    Light[] lights;
+
+    this(Sphere[] shapes_, Light[] lights_) {
+        shapes = shapes_;
+        lights = lights_;
+    }
+}
+
 
 
 
@@ -188,12 +208,16 @@ unittest {
     }
 }
 
-Color cast_ray_into_scene(Sphere[] scene, Line line, bool is_refracting=false) {
+Sphere find_closest_collision(Scene scene, Line line, out vec3d point, 
+        bool accepts_invisible, bool is_refracting) {
     vec3d p = line.pos;
+    bool found;
     vec3d closest;
     Sphere closest_sphere;
-    bool found;
-    foreach (sphere; scene) {
+    foreach (sphere; scene.shapes) {
+        if (!accepts_invisible && sphere.see_through_able) {
+            continue;
+        }
         vec3d result;
         if (intersect(line, sphere, result, is_refracting)) {
             if (!found || p.distance_to(result) < p.distance_to(closest)) {
@@ -205,6 +229,47 @@ Color cast_ray_into_scene(Sphere[] scene, Line line, bool is_refracting=false) {
     }
 
     if (!found) {
+        return null;
+    }
+
+    point = closest;
+    return closest_sphere;
+}
+
+Color cast_shadow_ray(Scene scene, vec3d pos, vec3d normal, Light light) {
+    vec3d pos_to_light = light.pos - pos;
+    Line line = Line(pos, pos_to_light);
+
+    vec3d point;
+    Sphere sphere = find_closest_collision(scene, line, point, false, false);
+
+    if (sphere !is null 
+            && pos.distance_to(point) <= pos.distance_to(light.pos)) {
+        return Color(0,0,0);
+    }
+
+    Color color = light.color;
+    double dot = pos_to_light.dot(normal);
+    if (dot <= 0) {
+        return Color(0,0,0);
+    }
+    double factor = dot * 50/(pos.distance_to(light.pos)^^2);
+
+    assert (factor > 0);
+
+    color.r *= factor;
+    color.g *= factor;
+    color.b *= factor;
+
+    return color;
+}
+
+Color cast_ray_into_scene(Scene scene, Line line, bool is_refracting=false) {
+    vec3d closest;
+    Sphere closest_sphere = find_closest_collision(scene, 
+            line, closest, true, is_refracting);
+
+    if (closest_sphere is null) {
         return Color(1,0.75,0.75);
     }
 
@@ -218,23 +283,37 @@ Color cast_ray_into_scene(Sphere[] scene, Line line, bool is_refracting=false) {
     } else if (closest_sphere.see_through_able) {
         assert (0);
     } else {
-        assert (0);
+        vec3d normal = closest_sphere.normal_for(closest);
+
+        Color color;
+        foreach (light; scene.lights) {
+            Color temp_color = cast_shadow_ray(scene, closest, normal, light);
+            color.r += temp_color.r;
+            color.g += temp_color.g;
+            color.b += temp_color.b;
+        }
+
+        color.r *= closest_sphere.color.r;
+        color.g *= closest_sphere.color.g;
+        color.b *= closest_sphere.color.b;
+
+        return color;
     }
 }
 
 
-Color[][] whit(Sphere[] scene, vec3d camera_pos, vec3d camera_dir,
-        double w, double h) {
+Color[][] whit(Scene scene, vec3d camera_pos, vec3d camera_dir,
+        double w, double h, double res = 0.1) {
     vec3d up = vec3d(0,0,1);
 
-    vec3d side = up.cross(camera_dir).normalize();
-    up = side.cross(camera_dir).normalize();
+    vec3d side = camera_dir.cross(up).normalize();
+    up = -camera_dir.cross(side).normalize();
 
     Color[][] ret;
-    for (double y = -h/2; y < h/2; y += 1) {
+    for (double y = h/2; y > -h/2; y -= res) {
         Color[] row;
-        for (double x = -w/2; x < w/2; x += 1) {
-            vec3d v = camera_dir + up * x + side * y;
+        for (double x = -w/2; x < w/2; x += res) {
+            vec3d v = camera_dir + up * y + side * x;
             Line l = Line(camera_pos, v);
             row ~= cast_ray_into_scene(scene, l);
             //writeln(x, " ", y, " ", to!string(row[$-1]));
@@ -251,10 +330,14 @@ void main() {
 
     std.file.write("o.bmp", bmp.encode(boo));
 
-    auto scene = [new Sphere(vec3d(100,0,0), 50, true, false, Color(0,1,1))];
-    auto line = Line(vec3d(0,0,0), vec3d(10,5.8,0));
+    auto spheres = [new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1))];
+    auto lights = [new Light(vec3d(60, -50, 20), Color(0,1,1)),
+         new Light(vec3d(-60, -50, 20), Color(1,1,0))];
 
-    auto data = whit(scene, line.pos, line.dir, 320, 240);
+    Scene scene = new Scene(spheres, lights);
+    auto line = Line(vec3d(0, -1000,0), vec3d(0,900,0));
+
+    auto data = whit(scene, line.pos, line.dir, 32, 24, 0.05);
 
     std.file.write("o.bmp", data.encode());
 }

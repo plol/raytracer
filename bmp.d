@@ -2,7 +2,7 @@ import std.range, std.stdio;
 
 
 struct Color {
-    double r, g, b;
+    double r=0, g=0, b=0;
 }
 
 ubyte[4] get_ubytes(uint x) {
@@ -11,6 +11,9 @@ ubyte[4] get_ubytes(uint x) {
 
 ubyte color_value(double x) {
     if (x == 0) return 0;
+
+    if (x > 1) return 255;
+    if (x < 0) return 0;
 
     //writeln("Color value of: ", x, " = ", x * 255);
     auto ret = cast(ubyte)(x * 255);
