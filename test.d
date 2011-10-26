@@ -101,6 +101,10 @@ bool intersect(Line line, Sphere sphere, out vec3d result,
         return false;
     }
 
+    if (line.dir.dot(pt_rel) <= 0) {
+        return false;
+    }
+
     double to_edge = sqrt((sphere.radius + 0.1)^^2 - dist^^2);
 
     if (is_refracting) {
@@ -201,7 +205,7 @@ Color cast_ray_into_scene(Sphere[] scene, Line line, bool is_refracting=false) {
     }
 
     if (!found) {
-        return Color(255,192,192);
+        return Color(1,0.75,0.75);
     }
 
     if (closest_sphere.reflective) {
@@ -233,7 +237,7 @@ Color[][] whit(Sphere[] scene, vec3d camera_pos, vec3d camera_dir,
             vec3d v = camera_dir + up * x + side * y;
             Line l = Line(camera_pos, v);
             row ~= cast_ray_into_scene(scene, l);
-            writeln(x, " ", y, " ", to!string(row[$-1]));
+            //writeln(x, " ", y, " ", to!string(row[$-1]));
         }
         ret ~= row;
     }
@@ -250,6 +254,8 @@ void main() {
     auto scene = [new Sphere(vec3d(100,0,0), 50, true, false, Color(0,1,1))];
     auto line = Line(vec3d(0,0,0), vec3d(10,5.8,0));
 
-    writeln(to!string(whit(scene, line.pos, line.dir, 320, 240)));
+    auto data = whit(scene, line.pos, line.dir, 320, 240);
+
+    std.file.write("o.bmp", data.encode());
 }
 
