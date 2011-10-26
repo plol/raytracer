@@ -91,6 +91,7 @@ class Sphere {
 
 bool intersect(Line line, Sphere sphere, out vec3d result,
         bool is_refracting=false) {
+    assert (sphere !is null);
     vec3d sphere_rel = sphere.pos - line.pos;
     vec3d pt_rel = sphere_rel.project_on(line.dir);
 
@@ -208,6 +209,7 @@ Color cast_ray_into_scene(Sphere[] scene, Line line, bool is_refracting=false) {
         vec3d new_dir = reflect(line.dir, normal);
 
         Line new_line = Line(closest, new_dir);
+        writeln(to!string(new_line));
         return cast_ray_into_scene(scene, new_line, is_refracting);
     } else if (closest_sphere.see_through_able) {
         assert (0);
@@ -215,6 +217,7 @@ Color cast_ray_into_scene(Sphere[] scene, Line line, bool is_refracting=false) {
         assert (0);
     }
 }
+
 
 Color[][] whit(Sphere[] scene, vec3d camera_pos, vec3d camera_dir,
         double w, double h) {
@@ -224,14 +227,15 @@ Color[][] whit(Sphere[] scene, vec3d camera_pos, vec3d camera_dir,
     up = side.cross(camera_dir).normalize();
 
     Color[][] ret;
-    for (double x = -w/2; x < w/2; x += 1) {
+    for (double y = -h/2; y < h/2; y += 1) {
         Color[] row;
-        for (double y = -h/2; y < h/2; y += 1) {
+        for (double x = -w/2; x < w/2; x += 1) {
             vec3d v = camera_dir + up * x + side * y;
             Line l = Line(camera_pos, v);
             row ~= cast_ray_into_scene(scene, l);
+            writeln(x, " ", y, " ", to!string(row[$-1]));
         }
-        row ~= ret;
+        ret ~= row;
     }
     return ret;
 }
@@ -243,7 +247,9 @@ void main() {
 
     std.file.write("o.bmp", bmp.encode(boo));
 
+    auto scene = [new Sphere(vec3d(100,0,0), 50, true, false, Color(0,1,1))];
+    auto line = Line(vec3d(0,0,0), vec3d(10,5.8,0));
 
-
+    writeln(to!string(whit(scene, line.pos, line.dir, 320, 240)));
 }
 
