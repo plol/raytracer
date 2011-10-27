@@ -338,8 +338,8 @@ void main() {
         //new Sphere(vec3d(0, -10_000, 0), 9980, false, false, Color(1,1,1)),
         new Sphere(vec3d(0, 0,  10_000), 9980, false, false, Color(1,1,1)),
         new Sphere(vec3d(0, 0, -10_000), 9980, false, false, Color(1,1,1))];
-    auto lights = [new Light(vec3d(60, 0, 0), Color(0,0,1)),
-         new Light(vec3d(-60, -50, 20), Color(0.7,0.7,0))];
+    auto lights = [new Light(vec3d(19, 0, 19), Color(0,0,1)),
+         new Light(vec3d(-19, -19, 19), Color(0.7,0.7,0))];
 
     Scene scene = new Scene(spheres, lights);
     auto line = Line(vec3d(0, -1000,0), vec3d(0,900,0));
