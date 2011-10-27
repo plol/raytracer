@@ -237,7 +237,7 @@ Sphere find_closest_collision(Scene scene, Line line, out vec3d point,
 }
 
 Color cast_shadow_ray(Scene scene, vec3d pos, vec3d normal, Light light) {
-    vec3d pos_to_light = light.pos - pos;
+    vec3d pos_to_light = (light.pos - pos).normalize();
     Line line = Line(pos, pos_to_light);
 
     vec3d point;
@@ -253,7 +253,7 @@ Color cast_shadow_ray(Scene scene, vec3d pos, vec3d normal, Light light) {
     if (dot <= 0) {
         return Color(0,0,0);
     }
-    double factor = dot * 50/(pos.distance_to(light.pos)^^2);
+    double factor = dot * 500/(pos.distance_to(light.pos)^^2);
 
     assert (factor > 0);
 
@@ -331,7 +331,7 @@ void main() {
     std.file.write("o.bmp", bmp.encode(boo));
 
     auto spheres = [
-        new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0,0,0), 7, false, false, Color(0.6,1,1)),
         new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
         new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(0,1,0)),
         new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,0,0)),
@@ -341,8 +341,8 @@ void main() {
         new Sphere(vec3d(0,0,-1_000_000), 999_980, false, false, Color(1,1,1))];
     
     auto lights = [
-        new Light(vec3d(10, 0, 10), Color(0,0,1)),
-        new Light(vec3d(-19, -19, 19), Color(0,1,0))];
+        new Light(vec3d(15, -15, -15), Color(0.5,0.5,0.5)),
+        new Light(vec3d(0, -5, 18), Color(0.8,0.8,0.8))];
 
     Scene scene = new Scene(spheres, lights);
     auto line = Line(vec3d(0,-100,0), vec3d(0,50,0));
