@@ -332,12 +332,12 @@ void main() {
 
     auto spheres = [new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1)),
         new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
-        new Sphere(vec3d( 10_000, 0, 0), 9980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(-10_000, 0, 0), 9980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(0,  10_000, 0), 9980, false, false, Color(1,1,1)),
-        //new Sphere(vec3d(0, -10_000, 0), 9980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(0, 0,  10_000), 9980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(0, 0, -10_000), 9980, false, false, Color(1,1,1))];
+        new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0, 1_000_000,0), 999_980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0,-1_000_000,0), 999_980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0,0, 1_000_000), 999_980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0,0,-1_000_000), 999_980, false, false, Color(1,1,1))];
     auto lights = [new Light(vec3d(19, 0, 19), Color(0,0,1)),
          new Light(vec3d(-19, -19, 19), Color(0.7,0.7,0))];
 
