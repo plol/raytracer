@@ -330,19 +330,22 @@ void main() {
 
     std.file.write("o.bmp", bmp.encode(boo));
 
-    auto spheres = [new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1)),
+    auto spheres = [
+        new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1)),
         new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
-        new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(0, 1_000_000,0), 999_980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(0,-1_000_000,0), 999_980, false, false, Color(1,1,1)),
-        new Sphere(vec3d(0,0, 1_000_000), 999_980, false, false, Color(1,1,1)),
+        new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(0,1,0)),
+        new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,0,0)),
+        new Sphere(vec3d(0, 1_000_000,0), 999_980, false, false, Color(0.8,0.8,0.8)),
+        new Sphere(vec3d(0,-1_000_000,0), 999_980, false, false, Color(0.3,0.3,0.3)),
+        new Sphere(vec3d(0,0, 1_000_000), 999_980, false, false, Color(0.4,0.4,0.4)),
         new Sphere(vec3d(0,0,-1_000_000), 999_980, false, false, Color(1,1,1))];
-    auto lights = [new Light(vec3d(19, 0, 19), Color(0,0,1)),
-         new Light(vec3d(-19, -19, 19), Color(0.7,0.7,0))];
+    
+    auto lights = [
+        new Light(vec3d(10, 0, 10), Color(0,0,1)),
+        new Light(vec3d(-19, -19, 19), Color(0,1,0))];
 
     Scene scene = new Scene(spheres, lights);
-    auto line = Line(vec3d(0, -1000,0), vec3d(0,900,0));
+    auto line = Line(vec3d(0,-100,0), vec3d(0,50,0));
 
     auto data = whit(scene, line.pos, line.dir, 32, 24, 0.05);
 
