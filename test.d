@@ -278,7 +278,7 @@ Color cast_ray_into_scene(Scene scene, Line line, bool is_refracting=false) {
         vec3d new_dir = reflect(line.dir, normal);
 
         Line new_line = Line(closest, new_dir);
-        writeln(to!string(new_line));
+        //writeln(to!string(new_line));
         return cast_ray_into_scene(scene, new_line, is_refracting);
     } else if (closest_sphere.see_through_able) {
         assert (0);
@@ -330,9 +330,16 @@ void main() {
 
     std.file.write("o.bmp", bmp.encode(boo));
 
-    auto spheres = [new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1))];
-    auto lights = [new Light(vec3d(60, -50, 20), Color(0,1,1)),
-         new Light(vec3d(-60, -50, 20), Color(1,1,0))];
+    auto spheres = [new Sphere(vec3d(0,0,0), 10, false, false, Color(1,1,1)),
+        new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
+        new Sphere(vec3d( 10_000, 0, 0), 9980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(-10_000, 0, 0), 9980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0,  10_000, 0), 9980, false, false, Color(1,1,1)),
+        //new Sphere(vec3d(0, -10_000, 0), 9980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0, 0,  10_000), 9980, false, false, Color(1,1,1)),
+        new Sphere(vec3d(0, 0, -10_000), 9980, false, false, Color(1,1,1))];
+    auto lights = [new Light(vec3d(60, 0, 0), Color(0,0,1)),
+         new Light(vec3d(-60, -50, 20), Color(0.7,0.7,0))];
 
     Scene scene = new Scene(spheres, lights);
     auto line = Line(vec3d(0, -1000,0), vec3d(0,900,0));
