@@ -124,14 +124,30 @@ bool intersect(Line line, Sphere sphere, out vec3d result,
     if (line.dir.dot(pt_rel) <= 0) {
         return false;
     }
+    
+    // Denna raden var inne i (sphere.radius) parantesen förut. Nu är den flyttad ner i if-else for great lulz (funkar inte)
+    // + ((sphere.see_through_able && !is_refracting) ? -0.1 : 0.1)
 
-    double to_edge = sqrt((sphere.radius + 0.1)^^2 - dist^^2);
+    double asdf = (sphere.radius)^^2 - dist^^2;
+    if (asdf < 0) asdf = 0;
+    double to_edge = sqrt(asdf);
 
     if (is_refracting) {
         to_edge = -to_edge;
     }
 
     result = pt_rel - (to_edge * line.dir.normalize()) + line.pos;
+
+    // Här är raden nu istället. If och else för att jag är lat och inte orkar göra vettigt :p
+    if (sphere.see_through_able && !is_refracting) {
+        result = pt_rel - (to_edge * line.dir.normalize()) + line.pos + 
+            (pt_rel - result).normalize();
+    }
+    else {
+        result = pt_rel - (to_edge * line.dir.normalize()) + line.pos - 
+            (pt_rel - result).normalize();
+    }
+
     return true;
 }
 
@@ -139,6 +155,17 @@ vec3d reflect(vec3d dir, vec3d normal) {
     vec3d to_normal = (-dir).project_on(normal) - (-dir);
 
     return to_normal*2 - dir;
+}
+
+vec3d refract(vec3d dir, vec3d normal, bool is_refracting) {
+    dir = dir.normalize();
+    normal = normal.normalize();
+    double n1genomn2 = is_refracting ? 1/refractive_index : refractive_index;
+    double cosostreck1 = normal.dot(-dir);
+    double cosostreck2 = sqrt(1 - n1genomn2^^2 * (1 - cosostreck1^^2));
+
+    vec3d vrefract = n1genomn2*dir + (n1genomn2 * cosostreck1 - cosostreck2) * normal;
+    return vrefract;
 }
 
 unittest {
@@ -224,6 +251,8 @@ Sphere find_closest_collision(Scene scene, Line line, out vec3d point,
                 found = true;
                 closest = result;
                 closest_sphere = sphere;
+                if (closest_sphere.see_through_able)
+                    int asdf = 1;
             }
         }
     }
@@ -253,9 +282,14 @@ Color cast_shadow_ray(Scene scene, vec3d pos, vec3d normal, Light light) {
     if (dot <= 0) {
         return Color(0,0,0);
     }
-    double factor = dot * 500/(pos.distance_to(light.pos)^^2);
+    double distance = pos.distance_to(light.pos);
+    distance = distance;
+    if (distance == 0) {
+        distance = 0.0001;
+    }
+    double factor = dot * 500/(distance^^2);
 
-    assert (factor > 0);
+    assert (factor >= 0, text("gefactor geist not stoerre aen 0, ", factor, ", ", distance));
 
     color.r *= factor;
     color.g *= factor;
@@ -264,7 +298,7 @@ Color cast_shadow_ray(Scene scene, vec3d pos, vec3d normal, Light light) {
     return color;
 }
 
-Color cast_ray_into_scene(Scene scene, Line line, bool is_refracting=false) {
+Color cast_ray_into_scene(Scene scene, Line line, bool is_refracting) {
     vec3d closest;
     Sphere closest_sphere = find_closest_collision(scene, 
             line, closest, true, is_refracting);
@@ -281,7 +315,12 @@ Color cast_ray_into_scene(Scene scene, Line line, bool is_refracting=false) {
         //writeln(to!string(new_line));
         return cast_ray_into_scene(scene, new_line, is_refracting);
     } else if (closest_sphere.see_through_able) {
-        assert (0);
+        vec3d normal = closest_sphere.normal_for(closest, is_refracting);
+        vec3d new_dir = refract(line.dir, normal, is_refracting);
+
+        Line new_line = Line(closest, new_dir);
+        //writeln(to!string(new_line));
+        return cast_ray_into_scene(scene, new_line, !is_refracting);
     } else {
         vec3d normal = closest_sphere.normal_for(closest);
 
@@ -315,7 +354,7 @@ Color[][] whit(Scene scene, vec3d camera_pos, vec3d camera_dir,
         for (double x = -w/2; x < w/2; x += res) {
             vec3d v = camera_dir + up * y + side * x;
             Line l = Line(camera_pos, v);
-            row ~= cast_ray_into_scene(scene, l);
+            row ~= cast_ray_into_scene(scene, l, false);
             //writeln(x, " ", y, " ", to!string(row[$-1]));
         }
         ret ~= row;
@@ -324,14 +363,11 @@ Color[][] whit(Scene scene, vec3d camera_pos, vec3d camera_dir,
 }
 
 void main() {
-    Color[][] boo = [[Color(0,0,1), Color(0,1,0), Color(1,0,0)],
-                     [Color(1,0,0), Color(1,1,1), Color(1,0,0)],
-                     [Color(1,0,0), Color(1,1,1), Color(1,0,0)]];
-
-    std.file.write("o.bmp", bmp.encode(boo));
+    try {
+//        throw new Exception("wank");
 
     auto spheres = [
-        new Sphere(vec3d(0,0,0), 7, false, false, Color(0.6,1,1)),
+        new Sphere(vec3d(0,0,0), 7, false, true, Color(0.6,1,1)),
         new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
         new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(0,1,0)),
         new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,0,0)),
@@ -343,12 +379,18 @@ void main() {
     auto lights = [
         new Light(vec3d(15, -15, -15), Color(0.5,0.5,0.5)),
         new Light(vec3d(0, -5, 18), Color(0.8,0.8,0.8))];
-
+    
     Scene scene = new Scene(spheres, lights);
     auto line = Line(vec3d(0,-100,0), vec3d(0,50,0));
 
     auto data = whit(scene, line.pos, line.dir, 32, 24, 0.05);
 
     std.file.write("o.bmp", data.encode());
+
+
+    } catch (Throwable t) {
+        writeln(t);
+        readln();
+    }
 }
 
