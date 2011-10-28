@@ -125,28 +125,14 @@ bool intersect(Line line, Sphere sphere, out vec3d result,
         return false;
     }
     
-    // Denna raden var inne i (sphere.radius) parantesen förut. Nu är den flyttad ner i if-else for great lulz (funkar inte)
-    // + ((sphere.see_through_able && !is_refracting) ? -0.1 : 0.1)
-
     double asdf = (sphere.radius)^^2 - dist^^2;
-    if (asdf < 0) asdf = 0;
+    fungusert(asdf > 0, "lololooooo, langden ar minus, vi maste ta abs av dist");
     double to_edge = sqrt(asdf);
 
     if (is_refracting) {
         to_edge = -to_edge;
     }
-
     result = pt_rel - (to_edge * line.dir.normalize()) + line.pos;
-
-    // Här är raden nu istället. If och else för att jag är lat och inte orkar göra vettigt :p
-    if (sphere.see_through_able && !is_refracting) {
-        result = pt_rel - (to_edge * line.dir.normalize()) + line.pos + 
-            (pt_rel - result).normalize();
-    }
-    else {
-        result = pt_rel - (to_edge * line.dir.normalize()) + line.pos - 
-            (pt_rel - result).normalize();
-    }
 
     return true;
 }
@@ -160,7 +146,7 @@ vec3d reflect(vec3d dir, vec3d normal) {
 vec3d refract(vec3d dir, vec3d normal, bool is_refracting) {
     dir = dir.normalize();
     normal = normal.normalize();
-    double n1genomn2 = is_refracting ? 1/refractive_index : refractive_index;
+    double n1genomn2 = is_refracting ? refractive_index : 1/refractive_index;
     double cosostreck1 = normal.dot(-dir);
     double cosostreck2 = sqrt(1 - n1genomn2^^2 * (1 - cosostreck1^^2));
 
@@ -251,8 +237,6 @@ Sphere find_closest_collision(Scene scene, Line line, out vec3d point,
                 found = true;
                 closest = result;
                 closest_sphere = sphere;
-                if (closest_sphere.see_through_able)
-                    int asdf = 1;
             }
         }
     }
@@ -319,6 +303,7 @@ Color cast_ray_into_scene(Scene scene, Line line, bool is_refracting) {
         vec3d new_dir = refract(line.dir, normal, is_refracting);
 
         Line new_line = Line(closest, new_dir);
+        
         //writeln(to!string(new_line));
         return cast_ray_into_scene(scene, new_line, !is_refracting);
     } else {
@@ -363,12 +348,14 @@ Color[][] whit(Scene scene, vec3d camera_pos, vec3d camera_dir,
 }
 
 void main() {
+    fungusert(1, "asdfasfsdf");
     try {
 //        throw new Exception("wank");
 
     auto spheres = [
-        new Sphere(vec3d(0,0,0), 7, false, true, Color(0.6,1,1)),
+        new Sphere(vec3d(0,0,0), 7, false, false, Color(0.6,1,1)),
         new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
+        new Sphere(vec3d(-6,-12,-8), 5, false, true, Color(1,1,1)),
         new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(0,1,0)),
         new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,0,0)),
         new Sphere(vec3d(0, 1_000_000,0), 999_980, false, false, Color(0.8,0.8,0.8)),
@@ -394,3 +381,11 @@ void main() {
     }
 }
 
+
+private void fungusert(bool asdf, string hej) {
+    if (asdf == false){
+        writeln(hej);
+        int i = 0;
+        int a = 1/i;
+    }
+}
