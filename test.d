@@ -356,9 +356,11 @@ void main() {
         new Sphere(vec3d(0,0,0), 7, false, false, Color(0.6,1,1)),
         new Sphere(vec3d(15,0,0), 5, true, false, Color(1,1,1)),
         new Sphere(vec3d(-6,-12,-8), 5, false, true, Color(1,1,1)),
+        new Sphere(vec3d(-6,-18,-8), 0.99, false, true, Color(1,1,1)),
+        new Sphere(vec3d(-6,-6,-8), 0.99, true, false, Color(1,1,1)),
         new Sphere(vec3d( 1_000_000,0,0), 999_980, false, false, Color(0,1,0)),
         new Sphere(vec3d(-1_000_000,0,0), 999_980, false, false, Color(1,0,0)),
-        new Sphere(vec3d(0, 1_000_000,0), 999_980, false, false, Color(0.8,0.8,0.8)),
+        new Sphere(vec3d(0, 1_000_000,0), 999_980, true, false, Color(0.8,0.8,0.8)),
         new Sphere(vec3d(0,-1_000_000,0), 999_980, false, false, Color(0.3,0.3,0.3)),
         new Sphere(vec3d(0,0, 1_000_000), 999_980, false, false, Color(0.4,0.4,0.4)),
         new Sphere(vec3d(0,0,-1_000_000), 999_980, false, false, Color(1,1,1))];
